@@ -1,5 +1,4 @@
 import buildDebug from 'debug';
-import { NextFunction, Request, Response } from 'express';
 import _ from 'lodash';
 import { HTPasswd } from 'verdaccio-htpasswd';
 
@@ -21,13 +20,21 @@ import {
   Callback,
   Config,
   JWTSignOptions,
-  Logger,
   PackageAccess,
   RemoteUser,
   Security,
 } from '@verdaccio/types';
 import { getMatchedPackagesSpec, isFunction, isNil } from '@verdaccio/utils';
 
+import {
+  $NextFunctionVer,
+  $RequestExtend,
+  $ResponseExtend,
+  AESPayload,
+  IAuthMiddleware,
+  NextFunction,
+  TokenEncryption,
+} from './types';
 import {
   convertPayloadToBase64,
   getDefaultPlugins,
@@ -39,25 +46,6 @@ import {
 } from './utils';
 
 const debug = buildDebug('verdaccio:auth');
-
-export interface TokenEncryption {
-  jwtEncrypt(user: RemoteUser, signOptions: JWTSignOptions): Promise<string>;
-  aesEncrypt(buf: string): string | void;
-}
-
-// remove
-export interface AESPayload {
-  user: string;
-  password: string;
-}
-export interface IAuthMiddleware {
-  apiJWTmiddleware(): $NextFunctionVer;
-  webUIJWTmiddleware(): $NextFunctionVer;
-}
-
-export type $RequestExtend = Request & { remote_user?: any; log: Logger };
-export type $ResponseExtend = Response & { cookies?: any };
-export type $NextFunctionVer = NextFunction & any;
 
 class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
   public config: Config;

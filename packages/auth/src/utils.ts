@@ -14,28 +14,16 @@ import {
 import { aesDecrypt, parseBasicPayload, verifyPayload } from '@verdaccio/signature';
 import { AuthPackageAllow, Config, Logger, RemoteUser, Security } from '@verdaccio/types';
 
-import { AESPayload, TokenEncryption } from './auth';
+import {
+  ActionsAllowed,
+  AllowAction,
+  AllowActionCallback,
+  AuthMiddlewarePayload,
+  AuthTokenHeader,
+  TokenEncryption,
+} from './types';
 
 const debug = buildDebug('verdaccio:auth:utils');
-
-export type BasicPayload = AESPayload | void;
-export type AuthMiddlewarePayload = RemoteUser | BasicPayload;
-
-export interface AuthTokenHeader {
-  scheme: string;
-  token: string;
-}
-export type AllowActionCallbackResponse = boolean | undefined;
-export type AllowActionCallback = (
-  error: VerdaccioError | null,
-  allowed?: AllowActionCallbackResponse
-) => void;
-
-export type AllowAction = (
-  user: RemoteUser,
-  pkg: AuthPackageAllow,
-  callback: AllowActionCallback
-) => void;
 
 /**
  * Split authentication header eg: Bearer [secret_token]
@@ -176,8 +164,6 @@ export function getDefaultPlugins(logger: Logger): pluginUtils.Auth<Config> {
     allow_unpublish: handleSpecialUnpublish(logger),
   };
 }
-
-export type ActionsAllowed = 'publish' | 'unpublish' | 'access';
 
 export function allow_action(action: ActionsAllowed, logger: Logger): AllowAction {
   return function allowActionCallback(
