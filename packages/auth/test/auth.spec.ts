@@ -441,5 +441,53 @@ describe('AuthTest', () => {
         );
       });
     });
+    test('should success if adduser', async () => {
+      const config: Config = new AppConfig({
+        ...getDefaultConfig(),
+        plugins: path.join(__dirname, './partials/plugin'),
+        auth: {
+          adduser: {},
+        },
+      });
+      config.checkSecretKey('12345');
+      const auth: Auth = new Auth(config);
+      await auth.init();
+      expect(auth).toBeDefined();
+
+      const callback = jest.fn();
+
+      auth.add_user('something', 'password', callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith(null, {
+        groups: ['test', '$all', '$authenticated', '@all', '@authenticated', 'all'],
+        name: 'something',
+        real_groups: ['test'],
+      });
+    });
+    test('should handle legacy add_user method', async () => {
+      const config: Config = new AppConfig({
+        ...getDefaultConfig(),
+        plugins: path.join(__dirname, './partials/plugin'),
+        auth: {
+          'adduser-legacy': {},
+        },
+      });
+      config.checkSecretKey('12345');
+      const auth: Auth = new Auth(config);
+      await auth.init();
+      expect(auth).toBeDefined();
+
+      const callback = jest.fn();
+
+      auth.add_user('something', 'password', callback);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith(null, {
+        groups: ['test', '$all', '$authenticated', '@all', '@authenticated', 'all'],
+        name: 'something',
+        real_groups: ['test'],
+      });
+    });
   });
 });

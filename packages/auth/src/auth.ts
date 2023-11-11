@@ -218,14 +218,15 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
     (function next(): void {
       let method = 'adduser';
       const plugin = plugins.shift() as pluginUtils.Auth<Config>;
-      if (typeof plugin.adduser !== 'function') {
+      // @ts-expect-error future major (7.x) should remove this section
+      if (typeof plugin.adduser === 'undefined' && typeof plugin.add_user === 'function') {
+        method = 'add_user';
+        warningUtils.emit(warningUtils.Codes.VERWAR006);
+      }
+      // @ts-ignore
+      if (typeof plugin[method] !== 'function') {
         next();
       } else {
-        // @ts-expect-error future major (7.x) should remove this section
-        if (typeof plugin.adduser === 'undefined' && typeof plugin.add_user === 'function') {
-          method = 'add_user';
-          warningUtils.emit(warningUtils.Codes.VERWAR006);
-        }
         // TODO: replace by adduser whenever add_user deprecation method has been removed
         // @ts-ignore
         plugin[method](
