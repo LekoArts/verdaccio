@@ -11,7 +11,9 @@ import {
   VerdaccioError,
   errorUtils,
   pluginUtils,
+  warningUtils,
 } from '@verdaccio/core';
+import '@verdaccio/core';
 import { asyncLoadPlugin } from '@verdaccio/loaders';
 import { logger } from '@verdaccio/logger';
 import { aesEncrypt, parseBasicPayload, signPayload } from '@verdaccio/signature';
@@ -214,29 +216,31 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
     debug('add user %o', user);
 
     (function next(): void {
+      let method = 'adduser';
       const plugin = plugins.shift() as pluginUtils.Auth<Config>;
       if (typeof plugin.adduser !== 'function') {
         next();
       } else {
         // @ts-expect-error future major (7.x) should remove this section
         if (typeof plugin.adduser === 'undefined' && typeof plugin.add_user === 'function') {
-          throw errorUtils.getInternalError(
-            'add_user method not longer supported, rename to adduser'
-          );
+          method = 'add_user';
+          warningUtils.emit(warningUtils.Codes.VERWAR006);
         }
-
-        plugin.adduser(
+        // TODO: replace by adduser whenever add_user deprecation method has been removed
+        // @ts-ignore
+        plugin[method](
           user,
           password,
           function (err: VerdaccioError | null, ok?: boolean | string): void {
             if (err) {
-              debug('the user  %o could not being added. Error: %o', user, err?.message);
+              debug('the user %o could not being added. Error: %o', user, err?.message);
               return cb(err);
             }
             if (ok) {
               debug('the user %o has been added', user);
               return self.authenticate(user, password, cb);
             }
+            debug('user could not be added, skip to next auth plugin');
             next();
           }
         );

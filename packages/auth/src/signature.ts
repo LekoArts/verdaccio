@@ -8,7 +8,6 @@ import { Security } from '@verdaccio/types';
 import { AuthMiddlewarePayload } from './types';
 import {
   convertPayloadToBase64,
-  expireReasons,
   isAESLegacy,
   parseAuthTokenHeader,
   verifyJWTPayload,
