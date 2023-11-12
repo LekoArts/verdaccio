@@ -23,7 +23,7 @@ jobs:
       - name: Install pnpm
         run: |
           corepack enable
-          corepack prepare --activate pnpm@8.9.0
+          corepack prepare 
       - name: set store
         run: |
           mkdir ~/.pnpm-store
@@ -49,7 +49,7 @@ jobs:
       - name: Install pnpm
         run: |
           corepack enable
-          corepack prepare --activate pnpm@8.9.0
+          corepack prepare 
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3
         with:
           path: ~/.pnpm-store
@@ -101,7 +101,7 @@ jobs:
       - name: Install pnpm
         run: |
           corepack enable
-          corepack prepare --activate pnpm@8.9.0
+          corepack prepare 
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3
         with:
           path: ~/.pnpm-store
@@ -145,7 +145,7 @@ jobs:
       - name: Install pnpm
         run: |
           corepack enable
-          corepack prepare --activate pnpm@8.9.0
+          corepack prepare
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3
         with:
           path: ~/.pnpm-store
@@ -154,7 +154,7 @@ jobs:
         run: |
           pnpm config set store-dir ~/.pnpm-store
       - name: Install
-        run: pnpm install --offline --reporter=silence --ignore-scripts --registry http://localhost:4873
+        run: pnpm install --loglevel debug --ignore-scripts --registry http://localhost:4873
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3
         with:
           path: ./packages/
@@ -190,7 +190,7 @@ jobs:
       - name: Install pnpm
         run: |
           corepack enable
-          corepack prepare --activate pnpm@8.9.0
+          corepack prepare 
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3
         with:
           path: ~/.pnpm-store

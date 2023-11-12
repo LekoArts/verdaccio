@@ -100,7 +100,7 @@ jobs:
       - name: Lint
         run: pnpm format:check
   test:
-    needs: [format, lint]
+    needs: [prepare]
     strategy:
       fail-fast: true
       matrix:
