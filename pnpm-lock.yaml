@@ -604,12 +604,18 @@ importers:
         specifier: workspace:12.0.0-next.4
         version: link:../plugins/htpasswd
     devDependencies:
+      '@verdaccio/middleware':
+        specifier: workspace:7.0.0-next.4
+        version: link:../middleware
       '@verdaccio/types':
         specifier: workspace:12.0.0-next.1
         version: link:../core/types
       express:
         specifier: 4.18.2
         version: 4.18.2(supports-color@6.1.0)
+      supertest:
+        specifier: 6.3.3
+        version: 6.3.3
 
   packages/cli:
     dependencies:

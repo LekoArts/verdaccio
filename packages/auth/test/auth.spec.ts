@@ -1,44 +1,50 @@
+import express, { NextFunction } from 'express';
 import path from 'path';
+import supertest from 'supertest';
 
 import { Config as AppConfig, ROLES, getDefaultConfig } from '@verdaccio/config';
-import { API_ERROR, errorUtils } from '@verdaccio/core';
+import { API_ERROR, HEADERS, HTTP_STATUS, errorUtils } from '@verdaccio/core';
 import { setup } from '@verdaccio/logger';
 import { Config } from '@verdaccio/types';
 
-import { Auth } from '../src';
+import { $RequestExtend, $ResponseExtend, Auth } from '../src';
 import { authPluginFailureConf, authPluginPassThrougConf, authProfileConf } from './helper/plugin';
 
-setup({ level: 'debug', type: 'stdout' });
+setup({});
 
 describe('AuthTest', () => {
-  test('should init correctly', async () => {
-    const config: Config = new AppConfig({ ...authProfileConf });
-    config.checkSecretKey('12345');
+  describe('default', () => {
+    test('should init correctly', async () => {
+      const config: Config = new AppConfig({ ...authProfileConf });
+      config.checkSecretKey('12345');
 
-    const auth: Auth = new Auth(config);
-    await auth.init();
-    expect(auth).toBeDefined();
-  });
-
-  test('should load default auth plugin', async () => {
-    const config: Config = new AppConfig({ ...authProfileConf, auth: undefined });
-    config.checkSecretKey('12345');
-
-    const auth: Auth = new Auth(config);
-    await auth.init();
-    expect(auth).toBeDefined();
-  });
-
-  test('should load custom algorithm', async () => {
-    const config: Config = new AppConfig({
-      ...authProfileConf,
-      auth: { htpasswd: { algorithm: 'sha1', file: './foo' } },
+      const auth: Auth = new Auth(config);
+      await auth.init();
+      expect(auth).toBeDefined();
     });
-    config.checkSecretKey('12345');
 
-    const auth: Auth = new Auth(config);
-    await auth.init();
-    expect(auth).toBeDefined();
+    test('should load default auth plugin', async () => {
+      const config: Config = new AppConfig({ ...authProfileConf, auth: undefined });
+      config.checkSecretKey('12345');
+
+      const auth: Auth = new Auth(config);
+      await auth.init();
+      expect(auth).toBeDefined();
+    });
+  });
+
+  describe('utils', () => {
+    test('should load custom algorithm', async () => {
+      const config: Config = new AppConfig({
+        ...authProfileConf,
+        auth: { htpasswd: { algorithm: 'sha1', file: './foo' } },
+      });
+      config.checkSecretKey('12345');
+
+      const auth: Auth = new Auth(config);
+      await auth.init();
+      expect(auth).toBeDefined();
+    });
   });
 
   describe('authenticate', () => {
@@ -488,6 +494,30 @@ describe('AuthTest', () => {
         name: 'something',
         real_groups: ['test'],
       });
+    });
+  });
+  describe('middleware', () => {
+    test('should init correctly', async () => {
+      const app = express();
+      const config: Config = new AppConfig({ ...authProfileConf });
+      config.checkSecretKey('12345');
+      const auth: Auth = new Auth(config);
+      await auth.init();
+
+      app.use(express.json());
+      app.use(auth.apiJWTmiddleware());
+      app.get('/*', (req: $RequestExtend, res: $ResponseExtend, next: NextFunction) => {
+        if (req.remote_user.error) {
+          next(new Error(req.remote_user.error));
+        } else {
+          next({ ok: true });
+        }
+      });
+
+      return supertest(app)
+        .get(`/`)
+        .set(HEADERS.AUTHORIZATION, 'Bearer foo')
+        .expect(HTTP_STATUS.INTERNAL_ERROR);
     });
   });
 });

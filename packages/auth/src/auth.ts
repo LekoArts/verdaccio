@@ -29,7 +29,6 @@ import {
 import { getMatchedPackagesSpec, isFunction, isNil } from '@verdaccio/utils';
 
 import {
-  $NextFunctionVer,
   $RequestExtend,
   $ResponseExtend,
   AESPayload,
@@ -368,7 +367,7 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
     })();
   }
 
-  public apiJWTmiddleware() {
+  public apiJWTmiddleware(): any {
     debug('jwt middleware');
     const plugins = this.plugins.slice(0);
     const helpers = { createAnonymousRemoteUser, createRemoteUser };
@@ -381,7 +380,7 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
     return (req: $RequestExtend, res: $ResponseExtend, _next: NextFunction) => {
       req.pause();
 
-      const next = function (err?: VerdaccioError): any {
+      const next = function (err?: VerdaccioError): NextFunction {
         req.resume();
         // uncomment this to reject users with bad auth headers
         // return _next.apply(null, arguments)
@@ -391,7 +390,7 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
           req.remote_user.error = err.message;
         }
 
-        return _next();
+        return _next() as unknown as NextFunction;
       };
 
       if (this._isRemoteUserValid(req.remote_user)) {
@@ -418,20 +417,20 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
 
       if (isAESLegacy(security)) {
         debug('api middleware using legacy auth token');
-        this._handleAESMiddleware(req, security, secret, authorization, next);
+        this.handleAESMiddleware(req, security, secret, authorization, next);
       } else {
         debug('api middleware using JWT auth token');
-        this._handleJWTAPIMiddleware(req, security, secret, authorization, next);
+        this.handleJWTAPIMiddleware(req, security, secret, authorization, next);
       }
     };
   }
 
-  private _handleJWTAPIMiddleware(
+  private handleJWTAPIMiddleware(
     req: $RequestExtend,
     security: Security,
     secret: string,
     authorization: string,
-    next: Function
+    next: any
   ): void {
     debug('handle JWT api middleware');
     const { scheme, token } = parseAuthTokenHeader(authorization);
@@ -468,7 +467,7 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
     }
   }
 
-  private _handleAESMiddleware(
+  private handleAESMiddleware(
     req: $RequestExtend,
     security: Security,
     secret: string,
@@ -508,7 +507,7 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
   /**
    * JWT middleware for WebUI
    */
-  public webUIJWTmiddleware(): $NextFunctionVer {
+  public webUIJWTmiddleware() {
     return (req: $RequestExtend, res: $ResponseExtend, _next: NextFunction): void => {
       if (this._isRemoteUserValid(req.remote_user)) {
         return _next();
@@ -518,7 +517,7 @@ class Auth implements IAuthMiddleware, TokenEncryption, pluginUtils.IBasicAuth {
       const next = (err: VerdaccioError | void): void => {
         req.resume();
         if (err) {
-          // req.remote_user.error = err.message;
+          req.remote_user.error = err.message;
           res.status(err.statusCode).send(err.message);
         }
 
